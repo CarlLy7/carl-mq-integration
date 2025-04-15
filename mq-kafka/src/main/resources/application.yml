@@ -1,0 +1,31 @@
+server:
+  port: 7777
+spring:
+  application:
+    name: mq-kafka
+  kafka:
+    bootstrap-servers: 192.168.20.128:9092,192.168.20.128:9093,192.168.20.128:9094
+    producer:
+      acks: all  # all所有的分区副本都持久化成功了，才会返回成功，不然都会认为发送失败
+      properties:
+        request.timeout.ms: 60000   #超时时间1分钟
+        #  生产者保证幂等性的原理：生产者会从Broker中申请一个Producer的唯一ID：PID
+        #  Producer 为发送到每个分区的消息维护一个独立的序列号，初始值为 0，每发送一条消息递增 1。序列号由 Producer 端自动生成并附加到消息中
+        #  Broker 维护每个分区的最新已提交序列号。当收到消息时：
+        #  若消息的序列号比 Broker 维护的值大 1：接受并更新序列号。
+        #  若序列号等于或小于当前值：视为重复消息，直接丢弃。若序列号大于当前值超过 1：触发乱序错误（如 InvalidSequenceNumber）
+        enable.idempotence: true #开启生产者幂等性
+        max.in.flight.requests.per.connection: 5 # 控制单个连接中 可未确认 的请求数量。幂等性要求此值≤5，以防止消息乱序（如 Producer 同时发送多条消息，可能导致 Broker 接收顺序与发送顺序不一致）
+        linger.ms: 0 #批次等待时间（毫秒），即使未满 batch-size，超过该时间也会发送，默认为0 立即发送，如果想要提高吞吐量但是不在乎延迟的话，可以调大
+      retries: 1  # 生产者发送消息失败后自动重试的次数
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      batch-size: 32768 # 生产者批量发送的最大大小，单位为字节
+      buffer-memory: 67108864 # 生产者缓存区，单位为字节
+
+#    consumer:
+#      enable-auto-commit: false # 关闭自动提交，开启手动提交
+#    listener:
+#      ack-mode: manual_immediate
+#    admin:
+#      fail-fast: true
