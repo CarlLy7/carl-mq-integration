@@ -11,8 +11,7 @@ import org.springframework.kafka.annotation.EnableKafka;
  * @Since: 1.0
  */
 @SpringBootApplication
-//开启生产者重试发送
-//@EnableKafkaRetryTopic
+// 开启@KakfaListener注解
 @EnableKafka
 public class MqKafkaApplication {
     public static void main(String[] args) {

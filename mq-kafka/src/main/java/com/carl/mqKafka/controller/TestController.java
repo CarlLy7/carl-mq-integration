@@ -1,8 +1,5 @@
 package com.carl.mqKafka.controller;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import org.apache.kafka.clients.admin.AdminClient;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,7 +10,7 @@ import com.carl.mqKafka.util.ProducerUtil;
 import jakarta.annotation.Resource;
 
 /**
- * @description:
+ * @description: 消息生产
  * @author: carl
  * @date: 2025.04.15
  * @Since: 1.0
@@ -21,21 +18,13 @@ import jakarta.annotation.Resource;
 @RestController
 public class TestController {
     @Resource
-    private KafkaTemplate<String,Object> kafkaTemplate;
+    private KafkaTemplate<String, Object> myKafkaTemplate;
     @Resource
     private AdminClient adminClient;
     @GetMapping("/test")
     public String test() throws InterruptedException {
-        ProducerUtil producerUtil = new ProducerUtil(kafkaTemplate, adminClient);
-        String msg="hello world";
-        ExecutorService pool = Executors.newCachedThreadPool();
-        pool.submit(new Runnable() {
-            @Override
-            public void run() {
-                producerUtil.sendMessage("Test333","hello", msg);
-            }
-        });
-
+        ProducerUtil producerUtil = new ProducerUtil(myKafkaTemplate, adminClient);
+        producerUtil.sendMessage("Test333", 2,"zero","zero2");
         return "success";
     }
 }

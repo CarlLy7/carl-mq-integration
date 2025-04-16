@@ -5,21 +5,18 @@ import java.util.Map;
 
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.KafkaAdmin;
 
 /**
- * @description:
+ * @description: kafka集群admin配置
  * @author: carl
  * @date: 2025.04.15
  * @Since: 1.0
  */
 @Configuration
 public class MyKafkaAdminClentConfig {
-    @Value("${spring.kafka.bootstrap-servers}")
-    private String bootstrapServers;
     @Bean
     public KafkaAdmin admin() {
         Map<String, Object> configs = new HashMap<>();
@@ -28,7 +25,7 @@ public class MyKafkaAdminClentConfig {
     }
 
     @Bean
-    public AdminClient adminClient(KafkaAdmin kafkaAdmin) {
-        return AdminClient.create(kafkaAdmin.getConfigurationProperties());
+    public AdminClient adminClient(KafkaAdmin admin) {
+        return AdminClient.create(admin.getConfigurationProperties());
     }
 }

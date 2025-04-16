@@ -1,5 +1,6 @@
 package com.carl.mqKafka.util;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -226,7 +227,7 @@ public class ProducerUtil {
      */
     public boolean sendMessage(String topicName, Integer partition, String key, String jsonStr) {
         createTopic(topicName, 3, 3);
-        log.info(Thread.currentThread().getName() + ":" + System.currentTimeMillis()
+        log.info(Thread.currentThread().getName() + ":" + LocalDateTime.now()
             + " 发送消息给Topic=[{}],partition= [{}], key=[{}],发送的消息内容为:[{}]", topicName, partition, key, jsonStr);
         CompletableFuture<SendResult<String, Object>> sendResultFuture =
             kafkaTemplate.send(new ProducerRecord<>(topicName, partition, key, jsonStr));

@@ -22,10 +22,4 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       batch-size: 32768 # 生产者批量发送的最大大小，单位为字节
       buffer-memory: 67108864 # 生产者缓存区，单位为字节
-
-#    consumer:
-#      enable-auto-commit: false # 关闭自动提交，开启手动提交
-#    listener:
-#      ack-mode: manual_immediate
-#    admin:
-#      fail-fast: true
+      bootstrap-servers: 192.168.20.128:9092,192.168.20.128:9093,192.168.20.128:9094
