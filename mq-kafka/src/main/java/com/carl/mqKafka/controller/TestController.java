@@ -24,7 +24,7 @@ public class TestController {
     @GetMapping("/test")
     public String test() throws InterruptedException {
         ProducerUtil producerUtil = new ProducerUtil(myKafkaTemplate, adminClient);
-        producerUtil.sendMessage("Test333", 2,"zero","zero2");
+        producerUtil.sendMessage("Test333", 2,"zero","zero");
         return "success";
     }
 }

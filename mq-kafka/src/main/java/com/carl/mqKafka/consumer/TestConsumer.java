@@ -3,15 +3,18 @@ package com.carl.mqKafka.consumer;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.springframework.kafka.annotation.DltHandler;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.annotation.TopicPartition;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.RetryContext;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Component;
+
+import com.carl.mqKafka.util.ProducerUtil;
 
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +30,11 @@ import lombok.extern.slf4j.Slf4j;
 public class TestConsumer {
     @Resource
     private RetryTemplate retryTemplate;
+
+    @Resource
+    private KafkaTemplate<String, Object> myKafkaTemplate;
+    @Resource
+    private AdminClient adminClient;
 
     /**
      * 指定topic单条消费
@@ -83,34 +91,31 @@ public class TestConsumer {
         }
     }
 
-
     /**
      * 结合retry实现重试, 不使用@RetryableTopic进行重试的理由：@RetryableTopic不支持批量监听的listener
+     * 
      * @param
      * @param acknowledgment
      */
-    @KafkaListener(containerFactory = "containerFactory",topics = "Test333", groupId = "consumer444",topicPartitions = {
-            @TopicPartition(topic = "Test333",partitions = {"2"})
-    })
-    public void listenTest333(List<ConsumerRecord<String,Object>> records, Acknowledgment acknowledgment) {
-        log.info("批量拉取的数量：{}",records.size());
-        for (ConsumerRecord<String,Object> record : records) {
-            log.info(Thread.currentThread().getName() + ": " + LocalDateTime.now() + " :单条消费消息，接受到的消息内容为[{}]",
-                    record);
+    @KafkaListener(containerFactory = "containerFactory", topics = "Test333", groupId = "consumer444",
+        topicPartitions = {@TopicPartition(topic = "Test333", partitions = {"2"})})
+    public void listenTest333(List<ConsumerRecord<String, String>> records, Acknowledgment acknowledgment) {
+        log.info("批量拉取的数量：{}", records.size());
+        for (ConsumerRecord<String, String> record : records) {
+            log.info(Thread.currentThread().getName() + ": " + LocalDateTime.now() + " :单条消费消息，接受到的消息内容为[{}]", record.value());
             if (record.value().toString().contains("zero")) {
                 try {
                     /**
-                     * String：返回类型
-                     * Exception：可能抛出的异常
+                     * String：返回类型 Exception：可能抛出的异常
                      */
                     retryTemplate.execute(new RetryCallback<String, Exception>() {
                         @Override
                         public String doWithRetry(RetryContext context) throws Exception {
                             log.info("我正在重试....重试次数: [{}]", context.getRetryCount());
                             try {
-                                if (context.getRetryCount() == 0) {
-                                    int a = 1 / 0;
-                                }
+                                // if (context.getRetryCount() == 0) {
+                                int a = 1 / 0;
+                                // }
                             } catch (ArithmeticException e) {
                                 throw e;
                             }
@@ -119,7 +124,11 @@ public class TestConsumer {
                     });
                 } catch (Exception e) {
                     log.error("重试失败");
-                }finally {
+                    ProducerUtil producerUtil = new ProducerUtil(myKafkaTemplate, adminClient);
+                    producerUtil.sendMessage("Test333_dlt", record.value().replace("\"",""));
+//                    producerUtil.sendMessage("Test333_dlt", JSONObject.parseObject(record.value(),String.class));
+//                    producerUtil.sendMessage("Test333_dlt", record.value());
+                } finally {
                     acknowledgment.acknowledge();
                 }
             }
@@ -132,10 +141,10 @@ public class TestConsumer {
      * @param record
      * @param
      */
-    @DltHandler
-    public void handleDltMessage(String record) {
-        log.info("死信topic中的消息为：[{}]",record);
-        throw new ArithmeticException();
-//        acknowledgment.acknowledge();
+    @KafkaListener(containerFactory = "containerFactory",topics = {"Test333_dlt"},groupId = "dltConsumer")
+    public void handleDltMessage(String record,Acknowledgment acknowledgment) {
+        log.info("死信topic中的消息为：[{}]", record);
+//        throw new ArithmeticException();
+         acknowledgment.acknowledge();
     }
 }
