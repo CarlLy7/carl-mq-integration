@@ -1,0 +1,37 @@
+server:
+  port: 7777
+spring:
+  application:
+    name: mq-rabbitmq
+  rabbitmq:
+    addresses: 192.168.20.128:5672,192.168.20.128:5673,192.168.20.128:5674
+    username: admin
+    password: admin
+    virtual-host: /
+    connection-timeout: 10000 #连接超时时间单位为ms
+    cache:
+      connection:
+        mode: connection #设置连接工厂缓存模式
+        size: 3 #缓存连接数
+
+    #生产者配置
+    publisher-confirm-type: correlated  # 设置生产者生产消息为确认模式，只有收到确认后才认为自己发送消息成功了
+    publisher-returns: true # 开启消息退回机制，如果失败了会接收退回消息
+
+    # 消费者(listener)配置
+    listener:
+      #默认使用simple模式的监听容器，支持多线程消费
+      simple:
+        acknowledge-mode: manual #手动确认，不自动提交
+        prefetch: 10 # 每次从队列中预取的消息数量
+        batch-size: 5 # 批量消费的消息数量
+        concurrency: 2 # 并发消费者数量
+        max-concurrency: 5 # 最大并发消费者数量
+        retry:
+          enabled: true #消费者开启重试
+          max-attempts: 3 # 最大重试次数
+          initial-interval: 1000 #初始重试间隔时间单位ms
+          multiplier: 2 # 每次重试时间间隔乘2
+
+
+
