@@ -16,7 +16,7 @@ spring:
 
     #生产者配置
     publisher-confirm-type: correlated  # 设置生产者生产消息为确认模式，只有收到确认后才认为自己发送消息成功了
-    publisher-returns: true # 开启消息退回机制，如果失败了会接收退回消息
+    publisher-returns: true # 开启如果消息由exchange路由到queue失败的话执行回调函数
 
     # 消费者(listener)配置
     listener:
